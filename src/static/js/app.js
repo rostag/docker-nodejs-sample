@@ -12,6 +12,7 @@ function App() {
 }
 
 function TodoListCard() {
+    const { Button } = ReactBootstrap;
     const [items, setItems] = React.useState(null);
 
     React.useEffect(() => {
@@ -40,12 +41,36 @@ function TodoListCard() {
     );
 
     const onItemRemoval = React.useCallback(
-        item => {
-            const index = items.findIndex(i => i.id === item.id);
+        (item) => {
+            const index = items.findIndex((i) => i.id === item.id);
             setItems([...items.slice(0, index), ...items.slice(index + 1)]);
         },
         [items],
     );
+
+    /**
+     * Helper function to download a file from the browser
+     * @param blob Blob data to download
+     * @param filename Name of the file to download
+     */
+    const dataExportDownloadHelper = (blobData, filename) => {
+        const blob = new Blob([blobData], { type: 'text/csv' });
+        const url = window.URL.createObjectURL(blob);
+        const anchor = document.createElement('a');
+        anchor.download = filename;
+        anchor.href = url;
+        anchor.click();
+    };
+
+    const getXls = () => {
+        fetch(`/get-xls`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(items),
+          })
+          .then((response) => response.blob())
+          .then((blob) => {dataExportDownloadHelper(blob, 'items.xls')})
+    };
 
     if (items === null) return 'Loading...';
 
@@ -63,6 +88,7 @@ function TodoListCard() {
                     onItemRemoval={onItemRemoval}
                 />
             ))}
+            <Button type="submit" variant="success" onClick={getXls}>{'Get XLS'}</Button>
         </React.Fragment>
     );
 }
@@ -106,7 +132,7 @@ function AddItemForm({ onNewItem }) {
                         disabled={!newItem.length}
                         className={submitting ? 'disabled' : ''}
                     >
-                        {submitting ? 'Adding...' : 'Add Item'}
+                        {submitting ? 'Adding...' : 'Add Item!!!'}
                     </Button>
                 </InputGroup.Append>
             </InputGroup>
